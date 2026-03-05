@@ -70,11 +70,7 @@ export class PokemonPageComponent implements OnInit, AfterViewInit, OnDestroy {
   protected readonly searchTerm = signal('');
   protected readonly isSearching = signal(false);
   protected readonly bookBooting = computed(
-    () =>
-      !this.loading() &&
-      !this.error() &&
-      this.pages().length > 0 &&
-      !this.bookInitialized(),
+    () => !this.loading() && !this.error() && this.pages().length > 0 && !this.bookInitialized(),
   );
   protected readonly matchedPages = computed(() => {
     const query = this.searchTerm().trim();
