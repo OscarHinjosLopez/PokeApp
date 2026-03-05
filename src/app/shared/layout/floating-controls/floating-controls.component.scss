@@ -1,0 +1,66 @@
+:host {
+  display: block;
+}
+
+.floating-controls {
+  position: fixed;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  justify-items: center;
+  gap: 0.7rem;
+  z-index: 1200;
+}
+
+.control-button {
+  width: 52px;
+  height: 52px;
+  box-shadow: 0 10px 20px rgba(8, 18, 36, 0.28);
+}
+
+.theme-button {
+  --mdc-fab-container-color: #2a75bb;
+  --mdc-fab-foreground-color: #f6fbff;
+}
+
+.language-button {
+  --mdc-fab-container-color: #e3350d;
+  --mdc-fab-foreground-color: #fff7f2;
+}
+
+.theme-label {
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(16, 20, 28, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #f4f5f8;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+:host-context(body.light-mode) .theme-label {
+  background: rgba(245, 248, 255, 0.96);
+  border: 1px solid #bccbe6;
+  color: #2a3652;
+}
+
+:host-context(body.light-mode) .control-button {
+  box-shadow: 0 10px 20px rgba(77, 102, 143, 0.2);
+}
+
+@media (max-width: 820px) {
+  .floating-controls {
+    right: 0.7rem;
+    top: auto;
+    bottom: 1rem;
+    transform: none;
+    grid-auto-flow: column;
+    align-items: center;
+  }
+
+  .theme-label {
+    display: none;
+  }
+}

@@ -1,0 +1,75 @@
+<section class="library-page" [attr.aria-label]="i18n.t('library.aria')">
+  <header class="library-header pokedex-panel">
+    <h1>{{ i18n.t('library.title') }}</h1>
+    <p>{{ i18n.t('library.subtitle') }}</p>
+  </header>
+
+  <mat-tab-group
+    class="library-tabs"
+    animationDuration="220ms"
+    [selectedIndex]="selectedTabIndex()"
+    (selectedIndexChange)="onTabChange($event)"
+  >
+    <mat-tab [label]="i18n.t('library.tabs.national')">
+      <section class="tab-panel">
+        <mat-card
+          class="book-highlight"
+          (click)="openNationalBook()"
+          [attr.aria-label]="i18n.t('library.national.openAria')"
+        >
+          <mat-card-content class="book-highlight__content">
+            <div class="book-highlight__identity">
+              <div class="book-highlight__icon" aria-hidden="true">
+                <mat-icon>auto_stories</mat-icon>
+              </div>
+              <div>
+                <h2>{{ i18n.t('library.national.title') }}</h2>
+                <p class="book-highlight__subtitle">{{ i18n.t('library.national.subtitle') }}</p>
+              </div>
+            </div>
+            <p class="book-highlight__description">{{ i18n.t('library.national.description') }}</p>
+          </mat-card-content>
+          <mat-card-actions class="book-highlight__actions">
+            <button mat-flat-button class="pokedex-button" type="button">
+              {{ i18n.t('library.national.action') }}
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      </section>
+    </mat-tab>
+
+    <mat-tab [label]="i18n.t('library.tabs.generation')">
+      <section class="tab-panel">
+        <p class="tab-help">{{ i18n.t('library.help.generation') }}</p>
+        <div class="sub-grid">
+          @for (generation of generationOptions(); track generation.name) {
+            <mat-card class="sub-book" (click)="openGenerationBook(generation.name)">
+              <mat-card-content>
+                <mat-icon>auto_stories</mat-icon>
+                <span>{{ prettyLabel(generation.name) }}</span>
+              </mat-card-content>
+            </mat-card>
+          }
+        </div>
+      </section>
+    </mat-tab>
+
+    <mat-tab [label]="i18n.t('library.tabs.type')">
+      <section class="tab-panel">
+        <p class="tab-help">{{ i18n.t('library.help.type') }}</p>
+        <div class="sub-grid">
+          @for (pokemonType of typeOptions(); track pokemonType.name) {
+            <mat-card class="sub-book" (click)="openTypeBook(pokemonType.name)">
+              <mat-card-content>
+                <mat-icon [class]="'type-symbol type-symbol--' + pokemonType.name">{{
+                  typeIcon(pokemonType.name)
+                }}</mat-icon>
+                <span>{{ prettyLabel(pokemonType.name) }}</span>
+              </mat-card-content>
+            </mat-card>
+          }
+        </div>
+      </section>
+    </mat-tab>
+  </mat-tab-group>
+</section>

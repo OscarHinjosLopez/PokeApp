@@ -1,0 +1,32 @@
+<aside class="floating-controls" [attr.aria-label]="i18n.t('app.controls.aria')">
+  <button
+    mat-fab
+    type="button"
+    class="control-button theme-button"
+    (click)="onToggleTheme()"
+    [attr.aria-label]="i18n.t('app.controls.toggleTheme')"
+  >
+    <mat-icon>{{ themeMode() === 'dark' ? 'dark_mode' : 'light_mode' }}</mat-icon>
+  </button>
+
+  <button
+    mat-fab
+    type="button"
+    class="control-button language-button"
+    [matMenuTriggerFor]="languageMenu"
+    [attr.aria-label]="i18n.t('app.controls.language')"
+  >
+    <mat-icon>language</mat-icon>
+  </button>
+
+  <div class="theme-label">{{ themeLabel() }}</div>
+</aside>
+
+<mat-menu #languageMenu="matMenu" xPosition="before">
+  @for (language of languageOptions(); track language.code) {
+    <button mat-menu-item type="button" (click)="onLanguageChange(language.code)">
+      <mat-icon>{{ i18n.language() === language.code ? 'check' : 'translate' }}</mat-icon>
+      <span>{{ i18n.t(language.labelKey) }}</span>
+    </button>
+  }
+</mat-menu>

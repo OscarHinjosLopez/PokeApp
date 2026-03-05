@@ -1,0 +1,100 @@
+<section class="book-page" [attr.aria-label]="i18n.t('reader.aria')">
+  <mat-card class="book-header pokedex-panel">
+    <div class="reader-actions">
+      <a mat-stroked-button class="back-library" routerLink="/">
+        <mat-icon>library_books</mat-icon>
+        {{ i18n.t('reader.backLibrary') }}
+      </a>
+      <a mat-stroked-button class="back-library" routerLink="/" [queryParams]="libraryTabQuery()">
+        <mat-icon>undo</mat-icon>
+        {{ backSectionLabel() }}
+      </a>
+    </div>
+    <h1>{{ bookTitle() }}</h1>
+    <p>{{ bookDescription() }}</p>
+
+    <label class="search-label" for="pokemon-search">{{ i18n.t('reader.searchLabel') }}</label>
+    <mat-form-field appearance="outline" class="search-field">
+      <input
+        matInput
+        id="pokemon-search"
+        type="search"
+        [value]="searchInput()"
+        (input)="updateSearchFromEvent($event)"
+        [placeholder]="i18n.t('reader.searchPlaceholder')"
+      />
+    </mat-form-field>
+    @if (pages().length > 0) {
+      <small>{{ pageCountLabel() }}</small>
+    }
+  </mat-card>
+
+  @if (loading()) {
+    <div class="loading-box">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p class="status-message">{{ i18n.t('reader.preparing') }}</p>
+    </div>
+  } @else if (error()) {
+    <p class="status-message status-error">{{ error() }}</p>
+  } @else {
+    <div
+      class="flip-book-wrapper"
+      [class.flip-book-wrapper--searching]="isSearching()"
+      [class.flip-book-wrapper--booting]="bookBooting()"
+    >
+      @if (bookBooting()) {
+        <div class="book-booting" aria-live="polite">
+          <mat-spinner diameter="34"></mat-spinner>
+        </div>
+      }
+
+      <div
+        #flipBook
+        class="flip-book"
+        [class.flip-book--searching]="isSearching()"
+        [class.flip-book--ready]="bookInitialized()"
+      >
+        @for (page of pages(); track page.id) {
+          <article
+            #flipPage
+            class="pokemon-sheet"
+            [attr.aria-label]="i18n.t('reader.pageAria', { name: formatName(page.name) })"
+          >
+            <div class="sheet-content">
+              <p class="sheet-id">N.º {{ page.id }}</p>
+              <h2>{{ formatName(page.name) }}</h2>
+
+              @if (page.imageUrl) {
+                <img
+                  [src]="page.imageUrl"
+                  [alt]="i18n.t('reader.imageAlt', { name: formatName(page.name) })"
+                  width="280"
+                  height="280"
+                />
+              } @else {
+                <p class="image-placeholder">{{ i18n.t('reader.noImage') }}</p>
+              }
+
+              <p class="description">{{ page.description }}</p>
+
+              <button
+                mat-flat-button
+                color="primary"
+                class="sheet-cta"
+                type="button"
+                (click)="selectPokemon(page.id)"
+              >
+                <mat-icon>travel_explore</mat-icon>
+                {{ i18n.t('reader.detailsAction') }}
+              </button>
+            </div>
+          </article>
+        }
+      </div>
+    </div>
+
+    @if (searchTerm().trim() && matchedPages().length === 0) {
+      <p class="status-message">{{ i18n.t('reader.noResults') }}</p>
+    }
+  }
+</section>
