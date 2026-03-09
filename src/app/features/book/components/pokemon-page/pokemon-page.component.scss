@@ -133,6 +133,10 @@
   background: linear-gradient(145deg, #161f33, #111828);
   border: 1px solid var(--border-subtle);
   box-shadow: var(--shadow-device);
+  // Prevent the 1350 un-processed cards from overflowing
+  // the container and creating an enormous scroll area before
+  // page-flip takes over and restructures the DOM.
+  overflow: hidden;
 }
 
 .flip-book-wrapper--booting {

@@ -265,8 +265,13 @@ export class PokemonPageComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     if (!this.flipPages.length) {
-      this.destroyPageFlip();
-      this.pageFlip = null;
+      // ViewChildren haven't been populated yet (Angular CD still pending).
+      // Wait for the next browser paint, which guarantees the DOM is fully updated.
+      requestAnimationFrame(() => {
+        if (!this.componentDestroyed) {
+          this.initializeBook();
+        }
+      });
       return;
     }
 
