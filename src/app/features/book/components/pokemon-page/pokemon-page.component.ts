@@ -3,11 +3,13 @@ import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
+  Injector,
   OnDestroy,
   OnInit,
   QueryList,
   ViewChild,
   ViewChildren,
+  afterNextRender,
   computed,
   effect,
   inject,
@@ -128,6 +130,7 @@ export class PokemonPageComponent implements OnInit, AfterViewInit, OnDestroy {
   });
 
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+  private readonly injector = inject(Injector);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly viewReady = signal(false);
@@ -158,7 +161,19 @@ export class PokemonPageComponent implements OnInit, AfterViewInit, OnDestroy {
       }
 
       this.bookInitialized.set(false);
-      setTimeout(() => this.initializeBook(), 0);
+      // afterNextRender is Angular's guaranteed post-render hook: it fires after
+      // the current (or next) rendering pass completes, at which point the @else
+      // block with #flipBook and all #flipPage @ViewChildren are in the DOM.
+      // setTimeout(0) and requestAnimationFrame are unreliable in production
+      // because Angular may schedule template updates in a later macrotask.
+      afterNextRender(
+        () => {
+          if (!this.componentDestroyed) {
+            this.initializeBook();
+          }
+        },
+        { injector: this.injector },
+      );
     });
   }
 
@@ -260,18 +275,7 @@ export class PokemonPageComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    // The #flipBook element and #flipPage children live inside an @else block
-    // that is only rendered once loading() is false. The effect fires as soon as
-    // pages() changes — which happens BEFORE loading.set(false) in the facade.
-    // Angular may not have flushed the template to the DOM by the time setTimeout(0)
-    // fires, so flipBookElement can still be null. requestAnimationFrame guarantees
-    // we wait until the browser has completed the pending render cycle.
     if (!this.flipBookElement || !this.flipPages || !this.flipPages.length) {
-      requestAnimationFrame(() => {
-        if (!this.componentDestroyed) {
-          this.initializeBook();
-        }
-      });
       return;
     }
 
