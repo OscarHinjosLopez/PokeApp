@@ -260,13 +260,13 @@ export class PokemonPageComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    if (!this.flipBookElement || !this.flipPages) {
-      return;
-    }
-
-    if (!this.flipPages.length) {
-      // ViewChildren haven't been populated yet (Angular CD still pending).
-      // Wait for the next browser paint, which guarantees the DOM is fully updated.
+    // The #flipBook element and #flipPage children live inside an @else block
+    // that is only rendered once loading() is false. The effect fires as soon as
+    // pages() changes — which happens BEFORE loading.set(false) in the facade.
+    // Angular may not have flushed the template to the DOM by the time setTimeout(0)
+    // fires, so flipBookElement can still be null. requestAnimationFrame guarantees
+    // we wait until the browser has completed the pending render cycle.
+    if (!this.flipBookElement || !this.flipPages || !this.flipPages.length) {
       requestAnimationFrame(() => {
         if (!this.componentDestroyed) {
           this.initializeBook();
