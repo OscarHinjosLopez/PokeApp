@@ -3,13 +3,11 @@ import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
-  Injector,
   OnDestroy,
   OnInit,
   QueryList,
   ViewChild,
   ViewChildren,
-  afterNextRender,
   computed,
   effect,
   inject,
@@ -18,6 +16,7 @@ import {
 import { isPlatformBrowser } from '@angular/common';
 import { PLATFORM_ID } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -130,7 +129,6 @@ export class PokemonPageComponent implements OnInit, AfterViewInit, OnDestroy {
   });
 
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
-  private readonly injector = inject(Injector);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly viewReady = signal(false);
@@ -140,6 +138,7 @@ export class PokemonPageComponent implements OnInit, AfterViewInit, OnDestroy {
   } | null = null;
   private pageFlipCtor: PageFlipCtor | null = null;
   private pendingRestorePokemonId: number | null = null;
+  private flipPagesSubscription: Subscription | null = null;
   private searchAnimationTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private searchDebounceTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private componentDestroyed = false;
@@ -155,25 +154,11 @@ export class PokemonPageComponent implements OnInit, AfterViewInit, OnDestroy {
         return;
       }
 
-      if (pages.length === 0) {
-        this.destroyPageFlip();
-        return;
-      }
-
-      this.bookInitialized.set(false);
-      // afterNextRender is Angular's guaranteed post-render hook: it fires after
-      // the current (or next) rendering pass completes, at which point the @else
-      // block with #flipBook and all #flipPage @ViewChildren are in the DOM.
-      // setTimeout(0) and requestAnimationFrame are unreliable in production
-      // because Angular may schedule template updates in a later macrotask.
-      afterNextRender(
-        () => {
-          if (!this.componentDestroyed) {
-            this.initializeBook();
-          }
-        },
-        { injector: this.injector },
-      );
+      // When pages change (different book or empty), destroy the current
+      // page-flip instance. Re-initialization is handled by the
+      // flipPages.changes subscription in ngAfterViewInit, which fires
+      // AFTER Angular has updated the DOM with the new @for items.
+      this.destroyPageFlip();
     });
   }
 
@@ -200,10 +185,36 @@ export class PokemonPageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     this.viewReady.set(true);
+
+    if (!this.isBrowser || !this.flipPages) {
+      return;
+    }
+
+    // QueryList.changes fires AFTER Angular finishes updating the DOM for the
+    // current CD cycle. It is the correct Angular API for "notify me when my
+    // @ViewChildren have been added/removed/changed in the DOM".
+    // This is reliable in production across all rendering modes, unlike
+    // setTimeout, requestAnimationFrame, or afterNextRender inside an effect.
+    this.flipPagesSubscription = this.flipPages.changes.subscribe(
+      (list: QueryList<ElementRef<HTMLElement>>) => {
+        if (list.length > 0 && !this.componentDestroyed) {
+          this.initializeBook();
+        }
+      },
+    );
+
+    // Safety net: if pages were already rendered synchronously before
+    // ngAfterViewInit (e.g. cache hit sets data before initial CD completes)
+    if (this.flipPages.length > 0) {
+      this.initializeBook();
+    }
   }
 
   ngOnDestroy(): void {
     this.componentDestroyed = true;
+
+    this.flipPagesSubscription?.unsubscribe();
+    this.flipPagesSubscription = null;
 
     if (this.searchAnimationTimeoutId !== null) {
       clearTimeout(this.searchAnimationTimeoutId);
@@ -382,7 +393,18 @@ export class PokemonPageComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     const module = await import('page-flip');
-    this.pageFlipCtor = module.PageFlip as unknown as PageFlipCtor;
+    // esbuild wraps CommonJS/UMD modules so the named export may be on
+    // module.default.PageFlip or module.default instead of module.PageFlip.
+    const PageFlipClass =
+      (module as unknown as { PageFlip: PageFlipCtor }).PageFlip ??
+      (module as unknown as { default: { PageFlip: PageFlipCtor } }).default?.PageFlip ??
+      (module as unknown as { default: PageFlipCtor }).default;
+
+    if (!PageFlipClass) {
+      return null;
+    }
+
+    this.pageFlipCtor = PageFlipClass;
     return this.pageFlipCtor;
   }
 
