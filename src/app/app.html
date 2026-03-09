@@ -1,2 +1,8 @@
-
 <router-outlet />
+<app-floating-controls
+  [themeMode]="themeMode()"
+  [themeLabel]="themeLabel()"
+  [languageOptions]="languageOptions"
+  (toggleTheme)="toggleTheme()"
+  (languageChange)="setLanguage($event)"
+/>

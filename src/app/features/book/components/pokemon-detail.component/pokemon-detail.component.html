@@ -1,0 +1,160 @@
+<section class="pokemon-detail-page" [attr.aria-label]="i18n.t('detail.aria')">
+  <div class="detail-actions">
+    <button
+      mat-raised-button
+      class="back-button back-button--primary"
+      type="button"
+      routerLink="/libro"
+      [queryParams]="backQueryParams()"
+    >
+      <mat-icon>menu_book</mat-icon>
+      {{ i18n.t('detail.backBook') }}
+    </button>
+    <button
+      mat-stroked-button
+      class="back-button back-button--secondary"
+      type="button"
+      routerLink="/"
+      [queryParams]="libraryTabQuery()"
+    >
+      <mat-icon>home</mat-icon>
+      {{ sectionBackLabel() }}
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="status-message loading-state">
+      <mat-progress-spinner mode="indeterminate" diameter="32"></mat-progress-spinner>
+      <span>{{ i18n.t('detail.loading') }}</span>
+    </div>
+  } @else if (error()) {
+    <p class="status-message status-error">{{ error() }}</p>
+  } @else if (pokemon(); as currentPokemon) {
+    <mat-card class="detail-card pokedex-card">
+      <header class="detail-header">
+        <p class="pokemon-id">#{{ currentPokemon.id }}</p>
+        <h1 class="pokemon-name">{{ displayName() }}</h1>
+        <mat-chip-set class="types" [attr.aria-label]="i18n.t('detail.mainInfoAria')">
+          @for (pokemonType of translatedTypes(); track pokemonType.key) {
+            <mat-chip [class]="'type-chip type-chip--' + pokemonType.key">{{
+              pokemonType.label
+            }}</mat-chip>
+          }
+        </mat-chip-set>
+      </header>
+
+      <div class="detail-grid">
+        <mat-card class="image-panel" [attr.aria-label]="i18n.t('detail.imageAria')">
+          @if (imageUrl()) {
+            <img
+              [src]="imageUrl()!"
+              [alt]="i18n.t('detail.officialArtworkAlt', { name: displayName() })"
+              width="320"
+              height="320"
+            />
+          } @else {
+            <p class="status-message">{{ i18n.t('detail.noImage') }}</p>
+          }
+        </mat-card>
+
+        <section class="info-panel" [attr.aria-label]="i18n.t('detail.mainInfoAria')">
+          <mat-card class="info-block">
+            <mat-card-header>
+              <mat-icon mat-card-avatar>info</mat-icon>
+              <mat-card-title>{{ i18n.t('detail.generalData') }}</mat-card-title>
+            </mat-card-header>
+            <mat-divider></mat-divider>
+            <mat-card-content>
+              <mat-list>
+                <mat-list-item>
+                  <span matListItemTitle>{{ i18n.t('detail.baseExperience') }}</span>
+                  <span matListItemLine>{{ currentPokemon.base_experience }}</span>
+                </mat-list-item>
+                <mat-list-item>
+                  <span matListItemTitle>{{ i18n.t('detail.height') }}</span>
+                  <span matListItemLine>{{ currentPokemon.height / 10 }} m</span>
+                </mat-list-item>
+                <mat-list-item>
+                  <span matListItemTitle>{{ i18n.t('detail.weight') }}</span>
+                  <span matListItemLine>{{ currentPokemon.weight / 10 }} kg</span>
+                </mat-list-item>
+              </mat-list>
+            </mat-card-content>
+          </mat-card>
+
+          <mat-card class="info-block">
+            <mat-card-header>
+              <mat-icon mat-card-avatar>bolt</mat-icon>
+              <mat-card-title>{{ i18n.t('detail.abilities') }}</mat-card-title>
+            </mat-card-header>
+            <mat-divider></mat-divider>
+            <mat-card-content>
+              <mat-list>
+                @for (ability of currentPokemon.abilities; track ability.slot) {
+                  <mat-list-item>
+                    <span matListItemTitle>
+                      {{
+                        ability.ability?.name
+                          ? i18n.tPokemonType(ability.ability!.name)
+                          : i18n.t('detail.notAvailable')
+                      }}
+                    </span>
+                    @if (ability.is_hidden) {
+                      <span matListItemLine class="hidden-tag">{{
+                        i18n.t('detail.hiddenAbility')
+                      }}</span>
+                    }
+                  </mat-list-item>
+                }
+              </mat-list>
+              @if (abilityDescription()) {
+                <p class="ability-description">{{ abilityDescription() }}</p>
+              }
+            </mat-card-content>
+          </mat-card>
+
+          <mat-card class="info-block">
+            <mat-card-header>
+              <mat-icon mat-card-avatar>query_stats</mat-icon>
+              <mat-card-title>{{ i18n.t('detail.stats') }}</mat-card-title>
+            </mat-card-header>
+            <mat-divider></mat-divider>
+            <mat-card-content>
+              <mat-list>
+                @for (stat of currentPokemon.stats; track stat.stat.name) {
+                  <mat-list-item>
+                    <span matListItemTitle>{{ translateStat(stat.stat.name) }}</span>
+                    <span matListItemLine>{{ stat.base_stat }}</span>
+                  </mat-list-item>
+                }
+              </mat-list>
+            </mat-card-content>
+          </mat-card>
+        </section>
+      </div>
+
+      <div class="detail-actions detail-actions-bottom">
+        <button
+          mat-raised-button
+          class="back-button back-button--primary"
+          type="button"
+          routerLink="/libro"
+          [queryParams]="backQueryParams()"
+        >
+          <mat-icon>menu_book</mat-icon>
+          {{ i18n.t('detail.backBook') }}
+        </button>
+        <button
+          mat-stroked-button
+          class="back-button back-button--secondary"
+          type="button"
+          routerLink="/"
+          [queryParams]="libraryTabQuery()"
+        >
+          <mat-icon>home</mat-icon>
+          {{ sectionBackLabel() }}
+        </button>
+      </div>
+    </mat-card>
+  }
+</section>
